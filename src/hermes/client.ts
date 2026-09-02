@@ -170,10 +170,12 @@ export class HermesClient {
     const conversationHistory = params.conversationHistory
       .filter((entry) => (entry.role === "user" || entry.role === "assistant") && entry.text.trim())
       .map((entry) => ({ role: entry.role, content: entry.text }));
+    // Don't send a model field - let the API server use its configured default
+    // (the gateway's model from config.yaml). Sending "hermes-agent" would be
+    // treated as a literal model ID and fail on providers like OpenRouter.
     const body: Record<string, unknown> = {
       input: params.text,
       session_id: params.sessionId,
-      model: "hermes-agent",
     };
     if (conversationHistory.length > 0) {
       body.conversation_history = conversationHistory;

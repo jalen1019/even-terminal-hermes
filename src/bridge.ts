@@ -1,5 +1,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
+import qrcodeTerminal from "qrcode-terminal";
+const qrTerminalGenerate = qrcodeTerminal.generate.bind(qrcodeTerminal);
 import { VERSION } from "./constants.js";
 import { normalizeOptions, parseArgs } from "./config.js";
 import { EVEN_STANDARD_ENDPOINTS, EVEN_STANDARD_MESSAGE_TYPES } from "./even-contract.js";
@@ -512,7 +514,7 @@ export class EvenHermesBridge {
     });
   }
 
-  /** Print the exact pairing URL the Even App expects. */
+  /** Print the exact pairing URL the Even App expects, plus a scannable QR code. */
   printBanner(address: AddressInfo | string | null): void {
     const lan = getLanAddress();
     const localPort = typeof address === "object" && address ? address.port : this.options.port;
@@ -535,6 +537,14 @@ export class EvenHermesBridge {
     console.log(`Token:  ${this.options.token}`);
     console.log(`CWD:    ${this.options.cwd}`);
     console.log("");
+    try {
+      qrTerminalGenerate(pairUrl);
+      console.log("");
+    } catch (error) {
+      if (this.options.verbose) {
+        console.log("[qr] skipped:", error instanceof Error ? error.message : String(error));
+      }
+    }
     console.log(pairUrl);
     console.log("");
   }
